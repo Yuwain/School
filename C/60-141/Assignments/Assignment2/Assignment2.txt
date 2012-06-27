@@ -1,0 +1,158 @@
+Script started on Tue 06 Mar 2012 11:33:17 PM EST
+]0;jeremy@ubuntu: ~/Programming/C/60-141/Assignmentsjeremy@ubuntu:~/Programming/C/60-141/Assignments$ cat Assignment2.c
+//Jeremy High - 103306452
+//Assignment 2
+//60-141-51
+//March 6th, 2012
+
+//Inclusions
+#include <stdio.h>
+#include <string.h>
+
+//Function Prototypes
+void Solve(char *, int);
+float ScaleNum(float, char);
+
+void main()
+{
+	int num, a;
+	char string[100];
+
+	scanf("%d", &num);
+
+	for (a = 0; a <= num; a++)
+	{
+		fgets(string, 100, stdin);
+
+		Solve(string, a);
+	}
+}
+
+//Takes in word problem (with P=x, I=x or U=x) and spits out answer
+//Input: Word problem
+//Output: Answer to problem
+void Solve(char *string, int a)
+{
+	float U, I, P;
+	char *loc, *loc2, scale;
+
+	//Checks if P is first number, gets P
+	if ((loc = strstr(string, "P=")) != NULL)
+	{
+		sscanf(loc, "%*c%*c%f%c", &P, &scale);
+		P = ScaleNum(P, scale);
+
+		//Checks if U is second number, gets U and solves for I
+		if ((loc2 = strstr(loc, "U=")) != NULL)
+		{
+			sscanf(loc2, "%*c%*c%f%c", &U, &scale);
+			U = ScaleNum(U, scale);
+
+			printf("Problem #%d:\nI=%0.2fA\n", a, (P/U));
+		}
+
+		//Checks if I is second number, gets I and solve for U
+		else if ((loc2 = strstr(loc, "I=")) != NULL)
+		{
+			sscanf(loc2, "%*c%*c%f%c", &I, &scale);
+			I = ScaleNum(I, scale);
+
+			printf("Problem #%d:\nU=%0.2fV\n", a, (P/I));
+		}
+	}
+
+	//Checks if U is first number, gets U
+	if ((loc = strstr(string, "U=")) != NULL)
+	{
+		sscanf(loc, "%*c%*c%f%c", &U, &scale);
+		U = ScaleNum(U, scale);
+
+		//Checks if I is second number, gets I and solves for P
+		if ((loc2 = strstr(loc, "I=")) != NULL)
+		{
+			sscanf(loc2, "%*c%*c%f%c", &I, &scale);
+			I = ScaleNum(I, scale);
+
+			printf("Problem #%d:\nP=%0.2fW\n", a, (U*I));
+		}
+
+		//Checks if P is second number, gets P and solves for I
+		else if ((loc2 = strstr(loc, "P=")) != NULL)
+		{
+			sscanf(loc2, "%*c%*c%f%c", &P, &scale);
+			P = ScaleNum(P, scale);
+		
+			printf("Problem #%d:\nI=%0.2fA\n", a, (P/U));
+		}
+	}
+
+	//Checks if I is first number, gets I
+	if ((loc = strstr(string, "I=")) != NULL)
+	{
+		sscanf(loc, "%*c%*c%f%c", &I, &scale);
+		I = ScaleNum(I, scale);
+
+		//Checks if P is second number, gets P and solves for U
+		if ((loc2 = strstr(loc, "P=")) != NULL)
+		{
+			sscanf(loc2, "%*c%*c%f%c", &P, &scale);
+			P = ScaleNum(P, scale);
+
+			printf("Problem #%d:\nU=%0.2fV\n", a, (P/I));
+		}
+
+		//Checks if U is second number, gets U and solves for P
+		else if ((loc2 = strstr(loc, "U=")) != NULL)
+		{
+			sscanf(loc2, "%*c%*c%f%c", &U, &scale);
+			U = ScaleNum(U, scale);
+
+			printf("Problem #%d:\nP=%0.2fW\n", a, (U*I));
+		}
+	}
+}
+
+//Takes number and prefix (m, M, k) and returns number in regards to base
+//Input: number and prefix
+//Output: number in regards to base scale
+float ScaleNum(float num, char scale)
+{
+	if (scale == 'm')
+		num = num/1000;
+	else if (scale == 'k')
+		num = num * 1000;
+	else if (scale == 'M')
+		num = num * 1000000;
+
+	return num;
+}
+]0;jeremy@ubuntu: ~/Programming/C/60-141/Assignmentsjeremy@ubuntu:~/Programming/C/60-141/Assignments$ cc Assignment2.c
+]0;jeremy@ubuntu: ~/Programming/C/60-141/Assignmentsjeremy@ubuntu:~/Programming/C/60-141/Assignments$ ./a.out < test.txt
+Problem #1:
+P=900.00W
+Problem #2:
+I=0.45A
+Problem #3:
+U=1250000.00V
+]0;jeremy@ubuntu: ~/Programming/C/60-141/Assignmentsjeremy@ubuntu:~/Programming/C/60-141/Assignments$ cat test.txt
+3
+If the voltage is U=200V and the current is I=4.5A, how much power is generated?
+A light-bulb yields P=100W and the voltage is U=220V. Compute the current, please.
+bla bla bla lightning strike I=2A bla bla bla P=2.5MW bla bla voltage?
+]0;jeremy@ubuntu: ~/Programming/C/60-141/Assignmentsjeremy@ubuntu:~/Programming/C/60-141/Assignments$ ls -l
+total 43
+-rwxrwxr-x 1 jeremy jeremy 12867 2012-03-06 23:33 [0m[01;32ma.out[0m
+-rw-rw-r-- 1 jeremy jeremy  3266 2012-01-31 22:34 Assign1.backup
+-rw-rw-r-- 1 jeremy jeremy  1966 2012-01-31 20:12 Assign1Backup.c
+-rw-rw-r-- 1 jeremy jeremy  5396 2012-03-06 22:37 Assignment1.bak
+-rw-rw-r-- 1 jeremy jeremy  3266 2012-01-31 22:07 Assignment1.c
+-rw-rw-r-- 1 jeremy jeremy  5011 2012-01-31 22:38 Assignment1.txt
+-rw-rw-r-- 1 jeremy jeremy  2739 2012-03-06 23:31 Assignment2.bak
+-rw-rw-r-- 1 jeremy jeremy  2739 2012-03-06 23:30 Assignment2.c
+-rw-rw-r-- 1 jeremy jeremy  3072 2012-03-06 23:33 Assignment2.txt
+-rw-rw-r-- 1 jeremy jeremy   130 2012-01-31 18:35 input.txt
+-rw-rw-r-- 1 jeremy jeremy   237 2012-03-06 23:17 test.txt
+]0;jeremy@ubuntu: ~/Programming/C/60-141/Assignmentsjeremy@ubuntu:~/Programming/C/60-141/Assignments$ exit
+exit
+
+Script done on Tue 06 Mar 2012 11:33:53 PM EST
