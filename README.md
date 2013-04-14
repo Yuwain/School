@@ -1,5 +1,7 @@
 Computer science assignments written by Jeremy High
 
+A good fraction of assignments are documented. If there is no documentation for a file, it is either because I figured (incorrectly) that it was not necessary, the assignment has bonus marks for length and comments added to such (60-214), or that it completely slipped my mind at the time. I am currently in the process of adding documentation to each assignment.
+
 The languages used for each course:  
 60-100	- Miranda  
 60-140	- C  
