@@ -14,5 +14,4 @@ The languages used for each course:
 60-256	- C, Bash  
 60-266	- MASM  
 60-330	- C  
-60-340	- C++  
 60-371	- Netlogo, Java  
