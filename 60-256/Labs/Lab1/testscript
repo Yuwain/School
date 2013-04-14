@@ -1,0 +1,17 @@
+#!/bin/bash
+
+count=0
+
+for count; do
+	if [`ls ???? | grep "a..."`]
+		then count++
+	elif [`ls ???? | grep "r..."`]
+		then count++
+	elif [`ls ???? | grep "s..."`]
+		then count++
+	elif [`ls ???? | grep "t..."`]
+		then count++
+	fi
+done
+
+echo "The number of files 4 characters long starting with a, r, s, or t is: "$count

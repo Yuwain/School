@@ -1,0 +1,8 @@
+Jenny John		(206)123-4567		2245 California Avenue, Windsor
+Sam Smith		(519)999-1234		13 Sunset Avenue, Windsor
+Michelle Wu		(519)999-8765		278 Riverside Boulevard, Tecumseh
+Jerry Seinfield	(406)984-6788		67 Curry Street, Lasalle
+Imran Haque		(519)254-8796		77 High Street, Tecumseh
+Tommy Anderson	(406)657-8799		543 Hollywood Avenue, Lasalle
+Aymen Bockhil	(416)944-4675		10 Park Road, Windsor
+Alice Laframboi	(519)544-5678		1298 Northwood Boulevard, Tecumseh
