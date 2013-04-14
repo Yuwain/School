@@ -1,0 +1,703 @@
+Script started on Thu 28 Feb 2013 03:43:57 AM EST
+]0;absinthe@Watson: ~/Classes/60-330/Assignment3[01;32mabsinthe@Watson[00m:[01;34m~/Classes/60-330/Assignment3[00m$ cat Assignment3.c 
+/**********************************************************
+	Written by:			Jeremy High
+	Student ID:			103306452
+	Written on:			February 23rd, 2013
+
+	This program spawns three children and has each
+	perform a task after receiving a token via pipe
+**********************************************************/
+
+//Inclusions
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/time.h>
+
+//Definitions
+#define error	-1	//Used to improve general readability of code
+
+int main(int argc, char *argv[]) {
+	int i,
+		status,
+		parent,
+		child[3],
+		exitStatus,
+		pipeOne[2],
+		pipeTwo[2],
+		pipeThree[2];
+	char command[100],
+		 token[] = "GO_AHEAD";
+
+	/* Error handling */
+	if (argc != 2) {
+		fprintf(stderr, "Usage: ./a.out <file name>\n");
+		exit(99);
+	}
+	
+	if (pipe(pipeOne) == error) {
+		fprintf(stderr, "Could not produce first pipe\n");
+		exit(99);
+	}
+
+	if (pipe(pipeTwo) == error) {
+		fprintf(stderr, "Could not produce second pipe\n");
+		exit(99);
+	}
+
+	if (pipe(pipeThree) == error) {
+		fprintf(stderr, "Could not produce third pipe\n");
+		exit(99);
+	}
+
+	/* Set all I/O operations to non-buffered
+	 * Stderr is unbuffered by default, so we 
+	 * can have this under the error handling */
+	setvbuf(stdin, NULL, _IONBF, 0);
+	setvbuf(stdout, NULL, _IONBF, 0);
+	setvbuf(fdopen(pipeOne[0], "r"), NULL, _IONBF, 0);
+	setvbuf(fdopen(pipeOne[1], "w"), NULL, _IONBF, 0);
+	setvbuf(fdopen(pipeTwo[0], "r"), NULL, _IONBF, 0);
+	setvbuf(fdopen(pipeTwo[1], "w"), NULL, _IONBF, 0);
+	setvbuf(fdopen(pipeThree[0], "r"), NULL, _IONBF, 0);
+	setvbuf(fdopen(pipeThree[1], "w"), NULL, _IONBF, 0);
+
+	/* Produces 3 children */
+	for (i = 0; i < 3; i++) {
+		if ((parent = child[i] = fork()) == error) {
+			fprintf(stderr, "Could not produce child #%d\n", i+1);
+			exit(99);
+		}
+
+		if (!parent)
+			break;
+	}
+
+	/* Write token to pipeOne and wait for children to exit */
+	if (parent) {
+		fprintf(stdout, "I am the parent of the following: %d, %d, and %d\n", child[0], child[1], child[2]);
+		
+		close(pipeOne[0]);
+
+		if (write(pipeOne[1], token, strlen(token)+1) == error) {
+			fprintf(stderr, "Error writing to pipeOne\n");
+			exit(99);
+		}
+
+		for (i = 0; i < 3; i++) {
+			waitpid(child[i], &status, 0);
+			fprintf(stdout, "From main: child, id #%d ended with status %d\n", child[i], WEXITSTATUS(status));
+		}
+
+		close(pipeOne[1]);
+
+		fprintf(stdout, "Goodbye!\n");
+	} 
+	else {
+		/* First child */
+		if (i == 0) {
+			close(pipeOne[1]);
+
+			/* Gets token from parent */
+			if (read(pipeOne[0], command, sizeof(command)) == error) {
+				fprintf(stderr, "Error reading from pipeOne\n");
+				exit(99);
+			}
+			
+			close(pipeOne[0]);
+			
+			fprintf(stdout, "I am child #%d and my id is: %d\n", i+1, getpid());
+			
+			/* Copies file received from argument */
+			sprintf(command, "cp %s newcopy.txt", argv[1]);
+			exitStatus = system(command);
+			
+			close(pipeTwo[0]);
+			
+			/* Sends token to child 2 */
+			if (write(pipeTwo[1], token, strlen(token)+1) == error) {
+				fprintf(stderr, "Error writing to pipeTwo\n");
+				exit(99);
+			}
+
+			close(pipeTwo[1]);
+
+			exit(++exitStatus); 
+		} 
+		/* Second child */
+		else if (i == 1) {
+			close(pipeTwo[1]);
+			
+			/* Gets token from child 1 */
+			if (read(pipeTwo[0], command, sizeof(command)) == error) {
+				fprintf(stderr, "Error reading from pipeTwo\n");
+				exit(99);
+			}
+
+			close(pipeTwo[0]);
+
+			fprintf(stdout, "I am child #%d and my id is: %d\n", i+1, getpid());
+
+			/* Runs ls on /bin and /sbin */
+			sprintf(command, "ls /bin /sbin -lR");
+			exitStatus = system(command);
+			
+			close(pipeThree[0]);
+			
+			/* Sends token to child 3 */
+			if (write(pipeThree[1], token, strlen(token)+1) == error) {
+				fprintf(stderr, "Error writing to pipeThree\n");
+				exit(99);
+			}
+
+			close(pipeThree[1]);
+			
+			exit(++exitStatus); 
+		} 
+		/* Third child */
+		else {
+			close(pipeThree[1]);
+
+			/* Gets token from child 2 */
+			if (read(pipeThree[0], command, sizeof(command)) == error) {
+				fprintf(stderr, "Error reading from pipeTwo\n");
+				exit(99);
+			}
+
+			fprintf(stdout, "I am child #%d and my id is: %d\n", i+1, getpid());
+
+			/* Cats file received from argument and source code */
+			sprintf(command, "cat %s Assignment3.c", argv[1]);
+			exitStatus = system(command);
+			exit(++exitStatus); 
+		}	// End if (i == 0):96
+	}	// End if (parent):78
+	
+	return 0;
+}
+]0;absinthe@Watson: ~/Classes/60-330/Assignment3[01;32mabsinthe@Watson[00m:[01;34m~/Classes/60-330/Assignment3[00m$ gcc Assignment3.c 
+]0;absinthe@Watson: ~/Classes/60-330/Assignment3[01;32mabsinthe@Watson[00m:[01;34m~/Classes/60-330/Assignment3[00m$ ./a.out
+Usage: ./a.out <file name>
+]0;absinthe@Watson: ~/Classes/60-330/Assignment3[01;32mabsinthe@Watson[00m:[01;34m~/Classes/60-330/Assignment3[00m$ ./a.out hi.txt
+I am the parent of the following: 10874, 10875, and 10876
+I am child #1 and my id is: 10874
+I am child #2 and my id is: 10875
+From main: child, id #10874 ended with status 1
+/bin:
+total 8988
+-rwxr-xr-x 1 root root  959168 Sep 19 09:40 bash
+-rwxr-xr-x 1 root root   31152 Aug  3  2012 bunzip2
+-rwxr-xr-x 1 root root 1819608 Nov 16 13:09 busybox
+-rwxr-xr-x 1 root root   31152 Aug  3  2012 bzcat
+lrwxrwxrwx 1 root root       6 Jan 27 16:55 bzcmp -> bzdiff
+-rwxr-xr-x 1 root root    2140 Aug  3  2012 bzdiff
+lrwxrwxrwx 1 root root       6 Jan 27 16:55 bzegrep -> bzgrep
+-rwxr-xr-x 1 root root    4877 Aug  3  2012 bzexe
+lrwxrwxrwx 1 root root       6 Jan 27 16:55 bzfgrep -> bzgrep
+-rwxr-xr-x 1 root root    3642 Aug  3  2012 bzgrep
+-rwxr-xr-x 1 root root   31152 Aug  3  2012 bzip2
+-rwxr-xr-x 1 root root   10376 Aug  3  2012 bzip2recover
+lrwxrwxrwx 1 root root       6 Jan 27 16:55 bzless -> bzmore
+-rwxr-xr-x 1 root root    1297 Aug  3  2012 bzmore
+-rwxr-xr-x 1 root root   47800 Nov 19 17:20 cat
+-rwxr-xr-x 1 root root   14680 Oct  1 12:05 chacl
+-rwxr-xr-x 1 root root   55936 Nov 19 17:20 chgrp
+-rwxr-xr-x 1 root root   51792 Nov 19 17:20 chmod
+-rwxr-xr-x 1 root root   55952 Nov 19 17:20 chown
+-rwxr-xr-x 1 root root   10408 May 22  2012 chvt
+-rwxr-xr-x 1 root root  126056 Nov 19 17:20 cp
+-rwxr-xr-x 1 root root  137304 Oct  1 12:02 cpio
+-rwxr-xr-x 1 root root  105712 Aug 15  2012 dash
+-rwxr-xr-x 1 root root   60016 Nov 19 17:20 date
+-rwxr-xr-x 1 root root   10528 Oct  3 17:00 dbus-cleanup-sockets
+-rwxr-xr-x 1 root root  405296 Oct  3 17:00 dbus-daemon
+-rwxr-xr-x 1 root root   10456 Oct  3 17:00 dbus-uuidgen
+-rwxr-xr-x 1 root root   51920 Nov 19 17:20 dd
+-rwxr-xr-x 1 root root   84896 Nov 19 17:20 df
+-rwxr-xr-x 1 root root  109944 Nov 19 17:20 dir
+-rwxr-xr-x 1 root root   22888 Sep  6 18:06 dmesg
+-rwxr-xr-x 1 root root   14712 Jun 21  2012 dnsdomainname
+-rwxr-xr-x 1 root root   14712 Jun 21  2012 domainname
+-rwxr-xr-x 1 root root   82184 May 22  2012 dumpkeys
+-rwxr-xr-x 1 root root   27056 Nov 19 17:20 echo
+-rwxr-xr-x 1 root root   47648 May 30  2012 ed
+-rwxr-xr-x 1 root root  163200 May 24  2012 egrep
+-rwxr-xr-x 1 root root   22944 Nov 19 17:20 false
+-rwxr-xr-x 1 root root   10416 May 22  2012 fgconsole
+-rwxr-xr-x 1 root root  117856 May 24  2012 fgrep
+-rwxr-xr-x 1 root root   36144 Sep  6 18:06 findmnt
+-rwxr-xr-x 1 root root   35888 Jul  3  2012 fuser
+-rwsr-xr-x 1 root root   30800 Jun 11  2012 fusermount
+-rwxr-xr-x 1 root root   23688 Oct  1 12:05 getfacl
+-rwxr-xr-x 1 root root  167296 May 24  2012 grep
+-rwxr-xr-x 1 root root    2251 Jun 28  2012 gunzip
+-rwxr-xr-x 1 root root    5937 Jun 28  2012 gzexe
+-rwxr-xr-x 1 root root   94000 Jun 28  2012 gzip
+-rwxr-xr-x 1 root root   14704 Jun 21  2012 hostname
+-rwxr-xr-x 1 root root    5935 Oct 12 15:29 init-checkconf
+-rwxr-xr-x 1 root root   16005 Oct 12 15:29 initctl2dot
+-rwxr-xr-x 1 root root  257464 Jun 25  2012 ip
+-rwxr-xr-x 1 root root   10408 May 22  2012 kbd_mode
+-rwxr-xr-x 1 root root   23008 Jul 16  2012 kill
+-rwxr-xr-x 1 root root  149392 Jun 11  2012 less
+-rwxr-xr-x 1 root root   10376 Jun 11  2012 lessecho
+lrwxrwxrwx 1 root root       8 Jan 27 16:55 lessfile -> lesspipe
+-rwxr-xr-x 1 root root   15832 Jun 11  2012 lesskey
+-rwxr-xr-x 1 root root    7745 Jun 11  2012 lesspipe
+-rwxr-xr-x 1 root root   47712 Nov 19 17:20 ln
+-rwxr-xr-x 1 root root  111360 May 22  2012 loadkeys
+-rwxr-xr-x 1 root root   44976 Sep  6 16:30 login
+-rwxr-xr-x 1 root root   63928 Sep 10 01:53 lowntfs-3g
+-rwxr-xr-x 1 root root  109944 Nov 19 17:20 ls
+-rwxr-xr-x 1 root root   44688 Sep  6 18:06 lsblk
+-rwxr-xr-x 1 root root    6312 Oct  1 10:09 lsmod
+-rwxr-xr-x 1 root root   47712 Nov 19 17:20 mkdir
+-rwxr-xr-x 1 root root   31200 Nov 19 17:20 mknod
+-rwxr-xr-x 1 root root   35440 Nov 19 17:20 mktemp
+-rwxr-xr-x 1 root root   35496 Sep  6 18:06 more
+-rwsr-xr-x 1 root root   94840 Sep  6 18:06 mount
+-rwxr-xr-x 1 root root   10296 Jul 20  2012 mountpoint
+lrwxrwxrwx 1 root root      20 Jan 27 16:55 mt -> /etc/alternatives/mt
+-rwxr-xr-x 1 root root   68784 Oct  1 12:02 mt-gnu
+-rwxr-xr-x 1 root root  113728 Nov 19 17:20 mv
+-rwxr-xr-x 1 root root  192008 Oct  1 10:12 nano
+lrwxrwxrwx 1 root root      20 Jan 27 16:55 nc -> /etc/alternatives/nc
+-rwxr-xr-x 1 root root   31208 Jun 14  2012 nc.openbsd
+lrwxrwxrwx 1 root root      24 Jan 27 16:55 netcat -> /etc/alternatives/netcat
+-rwxr-xr-x 1 root root  119688 Aug 22  2012 netstat
+-rwxr-xr-x 1 root root   14712 Jun 21  2012 nisdomainname
+-rwxr-xr-x 1 root root   59864 Sep 10 01:53 ntfs-3g
+-rwxr-xr-x 1 root root   10312 Sep 10 01:53 ntfs-3g.probe
+-rwxr-xr-x 1 root root   63512 Sep 10 01:53 ntfs-3g.secaudit
+-rwxr-xr-x 1 root root   18432 Sep 10 01:53 ntfs-3g.usermap
+-rwxr-xr-x 1 root root   26728 Sep 10 01:53 ntfscat
+-rwxr-xr-x 1 root root   30752 Sep 10 01:53 ntfsck
+-rwxr-xr-x 1 root root   30824 Sep 10 01:53 ntfscluster
+-rwxr-xr-x 1 root root   34920 Sep 10 01:53 ntfscmp
+-rwxr-xr-x 1 root root   22528 Sep 10 01:53 ntfsdump_logfile
+-rwxr-xr-x 1 root root   39024 Sep 10 01:53 ntfsfix
+-rwxr-xr-x 1 root root   55416 Sep 10 01:53 ntfsinfo
+-rwxr-xr-x 1 root root   31920 Sep 10 01:53 ntfsls
+-rwxr-xr-x 1 root root   26672 Sep 10 01:53 ntfsmftalloc
+-rwxr-xr-x 1 root root   30824 Sep 10 01:53 ntfsmove
+-rwxr-xr-x 1 root root   38952 Sep 10 01:53 ntfstruncate
+-rwxr-xr-x 1 root root   39504 Sep 10 01:53 ntfswipe
+lrwxrwxrwx 1 root root       6 Jan 27 16:55 open -> openvt
+-rwxr-xr-x 1 root root   18840 May 22  2012 openvt
+lrwxrwxrwx 1 root root      14 Jan 27 16:55 pidof -> /sbin/killall5
+-rwsr-xr-x 1 root root   35760 Oct  2 19:36 ping
+-rwsr-xr-x 1 root root   40304 Oct  2 19:36 ping6
+-rwxr-xr-x 1 root root   35400 Aug 16  2012 plymouth
+-rwxr-xr-x 1 root root   35712 Aug 16  2012 plymouth-upstart-bridge
+-rwxr-xr-x 1 root root   93176 Jul 16  2012 ps
+-rwxr-xr-x 1 root root   31288 Nov 19 17:20 pwd
+lrwxrwxrwx 1 root root       4 Jan 27 16:55 rbash -> bash
+-rwxr-xr-x 1 root root   39456 Nov 19 17:20 readlink
+-rwxr-xr-x 1 root root   55912 Nov 19 17:20 rm
+-rwxr-xr-x 1 root root   39408 Nov 19 17:20 rmdir
+lrwxrwxrwx 1 root root       4 Jan 27 16:55 rnano -> nano
+-rwxr-xr-x 1 root root     254 Oct 12 15:27 running-in-container
+-rwxr-xr-x 1 root root   19248 Sep 18 18:47 run-parts
+-rwxr-xr-x 1 root root   64968 Oct  1 10:22 sed
+-rwxr-xr-x 1 root root   32136 Oct  1 12:05 setfacl
+-rwxr-xr-x 1 root root   39824 May 22  2012 setfont
+-rwxr-xr-x 1 root root   12052 Oct  9 00:25 setupcon
+lrwxrwxrwx 1 root root       4 Jan 27 16:55 sh -> dash
+lrwxrwxrwx 1 root root       4 Jan 27 16:55 sh.distrib -> dash
+-rwxr-xr-x 1 root root   27072 Nov 19 17:20 sleep
+-rwxr-xr-x 1 root root   72480 Jun 25  2012 ss
+lrwxrwxrwx 1 root root       7 Nov 16 13:09 static-sh -> busybox
+-rwxr-xr-x 1 root root   64064 Nov 19 17:20 stty
+-rwsr-xr-x 1 root root   36840 Sep  6 16:30 su
+-rwxr-xr-x 1 root root   22960 Nov 19 17:20 sync
+-rwxr-xr-x 1 root root   14712 Sep  6 18:06 tailf
+-rwxr-xr-x 1 root root  307760 Mar 30  2012 tar
+-rwxr-xr-x 1 root root   10336 Sep 18 18:47 tempfile
+-rwxr-xr-x 1 root root   60144 Nov 19 17:20 touch
+-rwxr-xr-x 1 root root   22944 Nov 19 17:20 true
+-rwxr-xr-x 1 root root   14336 Jun 11  2012 ulockmgr_server
+-rwsr-xr-x 1 root root   69144 Sep  6 18:06 umount
+-rwxr-xr-x 1 root root   27104 Nov 19 17:20 uname
+-rwxr-xr-x 1 root root    2251 Jun 28  2012 uncompress
+-rwxr-xr-x 1 root root    2762 May 22  2012 unicode_start
+-rwxr-xr-x 1 root root  109952 Nov 19 17:20 vdir
+-rwxr-xr-x 1 root root    6240 Sep 24 05:37 vmmouse_detect
+-rwxr-xr-x 1 root root     946 Sep 18 18:47 which
+-rwxr-xr-x 1 root root   27200 Jun 13  2012 whiptail
+-rwxr-xr-x 1 root root   14712 Jun 21  2012 ypdomainname
+-rwxr-xr-x 1 root root    1939 Jun 28  2012 zcat
+-rwxr-xr-x 1 root root    1758 Jun 28  2012 zcmp
+-rwxr-xr-x 1 root root    5766 Jun 28  2012 zdiff
+-rwxr-xr-x 1 root root     121 Jun 28  2012 zegrep
+-rwxr-xr-x 1 root root     121 Jun 28  2012 zfgrep
+-rwxr-xr-x 1 root root    2133 Jun 28  2012 zforce
+-rwxr-xr-x 1 root root    5914 Jun 28  2012 zgrep
+-rwxr-xr-x 1 root root    2039 Jun 28  2012 zless
+-rwxr-xr-x 1 root root    2802 Jun 28  2012 zmore
+-rwxr-xr-x 1 root root    5049 Jun 28  2012 znew
+
+/sbin:
+total 9516
+-rwxr-xr-x 1 root root      6248 Oct  2 19:57 acpi_available
+-rwxr-xr-x 1 root root     32064 Sep  6 18:06 agetty
+-rwxr-xr-x 1 root root      5576 Oct  7 21:34 alsa
+-rwxr-xr-x 1 root root      6272 Oct  2 19:57 apm_available
+-rwxr-xr-x 1 root root     27152 Aug 22  2012 badblocks
+-rwxr-xr-x 1 root root     31528 Sep  6 18:06 blkid
+-rwxr-xr-x 1 root root     18736 Sep  6 18:06 blockdev
+-rwxr-xr-x 1 root root     19112 Jul 20  2012 bootlogd
+-rwxr-xr-x 1 root root    604824 Sep 19 11:56 brltty
+-rwxr-xr-x 1 root root      1416 Sep 10 00:22 brltty-setup
+-rwxr-xr-x 1 root root     18968 Oct  4 14:21 capsh
+-rwxr-xr-x 1 root root     54368 Sep  6 18:06 cfdisk
+-rwxr-xr-x 1 root root     14720 Oct  1 16:22 crda
+-rwxr-xr-x 1 root root     46800 Aug 21  2012 cryptsetup
+-rwxr-xr-x 1 root root      6280 Sep  6 18:06 ctrlaltdel
+-rwxr-xr-x 1 root root    104208 Aug 22  2012 debugfs
+-rwxr-xr-x 1 root root     72240 Oct  1 10:09 depmod
+-rwxr-xr-x 1 root root   1655808 Oct 20 02:08 dhclient
+-rwxr-xr-x 1 root root     14484 Oct 20 02:08 dhclient-script
+-rwxr-xr-x 1 root root     67536 Aug 21  2012 dmsetup
+-rwxr-xr-x 1 root root     51632 Jul 19  2012 dosfsck
+-rwxr-xr-x 1 root root     51632 Jul 19  2012 dosfslabel
+-rwxr-xr-x 1 root root     23064 Aug 22  2012 dumpe2fs
+-rwxr-xr-x 1 root root    248408 Aug 22  2012 e2fsck
+-rwxr-xr-x 1 root root     23128 Aug 22  2012 e2image
+lrwxrwxrwx 1 root root         7 Jan 27 16:56 e2label -> tune2fs
+-rwxr-xr-x 1 root root     10592 Aug 22  2012 e2undo
+-rwxr-xr-x 1 root root     99488 Sep  6 18:06 fdisk
+-rwxr-xr-x 1 root root      6296 Sep  6 18:06 findfs
+-rwxr-xr-x 1 root root     31616 Sep  6 18:06 fsck
+-rwxr-xr-x 1 root root     14632 Sep  6 18:06 fsck.cramfs
+lrwxrwxrwx 1 root root         6 Jan 27 16:56 fsck.ext2 -> e2fsck
+lrwxrwxrwx 1 root root         6 Jan 27 16:56 fsck.ext3 -> e2fsck
+lrwxrwxrwx 1 root root         6 Jan 27 16:56 fsck.ext4 -> e2fsck
+lrwxrwxrwx 1 root root         6 Jan 27 16:56 fsck.ext4dev -> e2fsck
+-rwxr-xr-x 1 root root     31192 Sep  6 18:06 fsck.minix
+lrwxrwxrwx 1 root root         7 Jan 27 16:56 fsck.msdos -> dosfsck
+-rwxr-xr-x 1 root root       333 Jul 20  2012 fsck.nfs
+lrwxrwxrwx 1 root root         7 Jan 27 16:56 fsck.vfat -> dosfsck
+-rwxr-xr-x 1 root root     10432 Sep  6 18:06 fsfreeze
+-rwxr-xr-x 1 root root      6152 Jul 20  2012 fstab-decode
+-rwxr-xr-x 1 root root     14608 Sep  6 18:06 fstrim
+-rwxr-xr-x 1 root root     10448 Oct  4 14:21 getcap
+-rwxr-xr-x 1 root root      6320 Oct  4 14:21 getpcaps
+-rwxr-xr-x 1 root root     32064 Sep  6 18:06 getty
+lrwxrwxrwx 1 root root         6 Jan 27 16:56 halt -> reboot
+-rwxr-xr-x 1 root root     98928 May  1  2012 hdparm
+-rwxr-xr-x 1 root root     35384 Sep  6 18:06 hwclock
+-rwxr-xr-x 1 root root     72200 Aug 22  2012 ifconfig
+-rwxr-xr-x 1 root root     58496 Oct  9 11:52 ifdown
+-rwxr-xr-x 1 root root     58496 Oct  9 11:52 ifquery
+-rwxr-xr-x 1 root root     58496 Oct  9 11:52 ifup
+-rwxr-xr-x 1 root root    163144 Oct 12 15:30 init
+-rwxr-xr-x 1 root root    155560 Oct 12 15:30 initctl
+-rwxr-xr-x 1 root root     14616 Oct  1 10:09 insmod
+-rwxr-xr-x 1 root root      2382 Sep 18 18:47 installkernel
+lrwxrwxrwx 1 root root         7 Jan 27 16:56 ip -> /bin/ip
+lrwxrwxrwx 1 root root        13 Jan 27 16:56 ip6tables -> xtables-multi
+lrwxrwxrwx 1 root root        13 Jan 27 16:56 ip6tables-restore -> xtables-multi
+lrwxrwxrwx 1 root root        13 Jan 27 16:56 ip6tables-save -> xtables-multi
+-rwxr-xr-x 1 root root     18752 Aug 22  2012 ipmaddr
+lrwxrwxrwx 1 root root        13 Jan 27 16:56 iptables -> xtables-multi
+lrwxrwxrwx 1 root root        13 Jan 27 16:56 iptables-restore -> xtables-multi
+lrwxrwxrwx 1 root root        13 Jan 27 16:56 iptables-save -> xtables-multi
+-rwxr-xr-x 1 root root     22856 Aug 22  2012 iptunnel
+-rwxr-xr-x 1 root root     14608 Sep  6 18:06 isosize
+-rwxr-xr-x 1 root root    107216 May 24  2012 iw
+-rwxr-xr-x 1 root root     27008 May  3  2012 iwconfig
+-rwxr-xr-x 1 root root     14720 May  3  2012 iwevent
+-rwxr-xr-x 1 root root     14528 May  3  2012 iwgetid
+-rwxr-xr-x 1 root root     35352 May  3  2012 iwlist
+-rwxr-xr-x 1 root root     14608 May  3  2012 iwpriv
+-rwxr-xr-x 1 root root     14568 May  3  2012 iwspy
+-rwxr-xr-x 1 root root     10480 May 22  2012 kbdrate
+-rwxr-xr-x 1 root root     18832 Jul 20  2012 killall5
+-rwxr-xr-x 1 root root       465 Oct  3 22:14 ldconfig
+-rwxr-xr-x 1 root root    979336 Oct  3 22:14 ldconfig.real
+-rwxr-xr-x 1 root root      1100 Mar  5  2012 loadndisdriver
+-rwxr-xr-x 1 root root     18808 Apr 12  2012 loadndisdriver-1.9
+-rwxr-xr-x 1 root root     10536 Aug 22  2012 logsave
+-rwxr-xr-x 1 root root     43576 Sep  6 18:06 losetup
+lrwxrwxrwx 1 root root        10 Jan 27 16:56 lsmod -> /bin/lsmod
+lrwxrwxrwx 1 root root         9 Jan 27 16:56 lspcmcia -> pccardctl
+-rwxr-xr-x 1 root root     52466 May 23  2012 MAKEDEV
+-rwxr-xr-x 1 root root     19296 Aug 22  2012 mii-tool
+-rwxr-xr-x 1 root root     27584 Jul 19  2012 mkdosfs
+-rwxr-xr-x 1 root root     89624 Aug 22  2012 mke2fs
+-rwxr-xr-x 1 root root     10432 Sep  6 18:06 mkfs
+-rwxr-xr-x 1 root root     18728 Sep  6 18:06 mkfs.bfs
+-rwxr-xr-x 1 root root     31208 Sep  6 18:06 mkfs.cramfs
+lrwxrwxrwx 1 root root         6 Jan 27 16:56 mkfs.ext2 -> mke2fs
+lrwxrwxrwx 1 root root         6 Jan 27 16:56 mkfs.ext3 -> mke2fs
+lrwxrwxrwx 1 root root         6 Jan 27 16:56 mkfs.ext4 -> mke2fs
+lrwxrwxrwx 1 root root         6 Jan 27 16:56 mkfs.ext4dev -> mke2fs
+-rwxr-xr-x 1 root root     27136 Sep  6 18:06 mkfs.minix
+lrwxrwxrwx 1 root root         7 Jan 27 16:56 mkfs.msdos -> mkdosfs
+lrwxrwxrwx 1 root root         6 Jan 27 16:56 mkfs.ntfs -> mkntfs
+lrwxrwxrwx 1 root root         7 Jan 27 16:56 mkfs.vfat -> mkdosfs
+-rwxr-xr-x 1 root root     18744 Jul  3  2012 mkhomedir_helper
+-rwxr-xr-x 1 root root     79984 Sep 10 01:53 mkntfs
+-rwxr-xr-x 1 root root     23104 Sep  6 18:06 mkswap
+-rwxr-xr-x 1 root root     31112 Oct 10 05:34 mntctl
+-rwxr-xr-x 1 root root     31096 Oct  1 10:09 modinfo
+-rwxr-xr-x 1 root root     60008 Oct  1 10:09 modprobe
+-rwxr-xr-x 1 root root    104968 Oct 10 05:34 mountall
+-rwxr-xr-x 1 root root     10240 Jun 11  2012 mount.fuse
+lrwxrwxrwx 1 root root        15 Jan 27 16:56 mount.lowntfs-3g -> /bin/lowntfs-3g
+lrwxrwxrwx 1 root root        13 Jan 27 16:56 mount.ntfs -> mount.ntfs-3g
+lrwxrwxrwx 1 root root        12 Jan 27 16:56 mount.ntfs-3g -> /bin/ntfs-3g
+-rwxr-xr-x 1 root root     18736 Nov  9 13:20 mount.vboxsf
+-rwxr-xr-x 1 root root     14816 Aug 22  2012 nameif
+-rwxr-xr-x 1 root root     14608 Sep 18 11:01 nfnl_osf
+-rwxr-xr-x 1 root root     55400 Sep 10 01:53 ntfsclone
+-rwxr-xr-x 1 root root     30824 Sep 10 01:53 ntfscp
+-rwxr-xr-x 1 root root     26728 Sep 10 01:53 ntfslabel
+-rwxr-xr-x 1 root root     71792 Sep 10 01:53 ntfsresize
+-rwxr-xr-x 1 root root     47208 Sep 10 01:53 ntfsundelete
+-rwxr-xr-x 1 root root      2251 Dec  2  2009 on_ac_power
+-rwxr-xr-x 1 root root     10472 Jul  3  2012 pam_tally
+-rwxr-xr-x 1 root root     10528 Jul  3  2012 pam_tally2
+-rwxr-xr-x 1 root root     81280 Jul 17  2012 parted
+-rwxr-xr-x 1 root root     10480 Jul 17  2012 partprobe
+-rwxr-xr-x 1 root root     18800 Jun 29  2012 pccardctl
+-rwxr-xr-x 1 root root      6232 Sep  6 18:06 pivot_root
+-rwxr-xr-x 1 root root     10440 Aug 22  2012 plipconfig
+-rwxr-xr-x 1 root root     77424 Aug 16  2012 plymouthd
+lrwxrwxrwx 1 root root         6 Jan 27 16:56 poweroff -> reboot
+-rwxr-xr-x 1 root root     29864 Aug 22  2012 rarp
+-rwxr-xr-x 1 root root     10416 Sep  6 18:06 raw
+-rwxr-xr-x 1 root root     14784 Oct 12 15:30 reboot
+-rwxr-xr-x 1 root root     10488 Oct  1 16:22 regdbdump
+lrwxrwxrwx 1 root root         7 Jan 27 16:56 reload -> initctl
+-rwxr-xr-x 1 root root     39888 Aug 22  2012 resize2fs
+-rwxr-xr-x 1 root root      5630 Sep  7 17:43 resolvconf
+lrwxrwxrwx 1 root root         7 Jan 27 16:56 restart -> initctl
+-rwxr-xr-x 1 root root     14656 Oct  1 10:09 rmmod
+-rwxr-xr-x 1 root root     58032 Aug 22  2012 route
+-rwxr-xr-x 1 root root     35304 Jun 25  2012 rtacct
+-rwxr-xr-x 1 root root     35224 Jun 25  2012 rtmon
+-rwxr-xr-x 1 root root     14336 Oct 12 15:30 runlevel
+-rwxr-xr-x 1 root root     10472 Oct  4 14:21 setcap
+-rwxr-xr-x 1 root root     10528 May 22  2012 setvtrgb
+-rwxr-xr-x 1 root root     61824 Sep  6 18:06 sfdisk
+-rwxr-xr-x 1 root root       879 Sep  6 16:30 shadowconfig
+-rwxr-xr-x 1 root root     60328 Oct 12 15:30 shutdown
+-rwxr-xr-x 1 root root     33992 Aug 22  2012 slattach
+lrwxrwxrwx 1 root root         7 Jan 27 16:56 start -> initctl
+-rwxr-xr-x 1 root root     31456 Jul 20  2012 startpar
+-rwxr-xr-x 1 root root     28224 Oct  1 15:30 start-stop-daemon
+lrwxrwxrwx 1 root root         7 Jan 27 16:56 status -> initctl
+lrwxrwxrwx 1 root root         7 Jan 27 16:56 stop -> initctl
+-rwxr-xr-x 1 root root     14736 Jul 20  2012 sulogin
+-rwxr-xr-x 1 root root     14656 Sep  6 18:06 swaplabel
+lrwxrwxrwx 1 root root         6 Jan 27 16:56 swapoff -> swapon
+-rwxr-xr-x 1 root root     27232 Sep  6 18:06 swapon
+-rwxr-xr-x 1 root root     10536 Sep  6 18:06 switch_root
+-rwxr-xr-x 1 root root     18848 Jul 16  2012 sysctl
+-rwxr-xr-x 1 root root    269312 Jun 25  2012 tc
+-rwxr-xr-x 1 root root     51464 Oct 12 15:30 telinit
+-rwxr-xr-x 1 root root     68920 Aug 22  2012 tune2fs
+-rwxr-xr-x 1 root root    137248 Oct 11 04:17 udevadm
+-rwxr-xr-x 1 root root    137312 Oct 11 04:17 udevd
+-rwxr-xr-x 1 root root     10440 Jun 14  2012 umount.udisks
+-rwxr-xr-x 1 root root     10496 Nov 29 17:25 umount.udisks2
+-rwxr-sr-x 1 root shadow   35448 Jul  3  2012 unix_chkpwd
+-rwxr-xr-x 1 root root     31312 Jul  3  2012 unix_update
+-rwxr-xr-x 1 root root    108776 Oct 12 15:30 upstart-socket-bridge
+-rwxr-xr-x 1 root root     51464 Oct 12 15:30 upstart-udev-bridge
+-rwxr-xr-x 1 root root     43312 Oct  2 19:35 ureadahead
+-rwxr-xr-x 1 root root     18848 Sep  6 18:06 wipefs
+-rwxr-xr-x 1 root root      1735 Sep 12 09:48 wpa_action
+-rwxr-xr-x 1 root root     79080 Sep 13 10:02 wpa_cli
+-rwxr-xr-x 1 root root   1043224 Sep 13 10:02 wpa_supplicant
+-rwxr-xr-x 1 root root     87640 Sep 18 11:01 xtables-multi
+I am child #3 and my id is: 10876
+From main: child, id #10875 ended with status 1
+Hello
+/**********************************************************
+	Written by:			Jeremy High
+	Student ID:			103306452
+	Written on:			February 23rd, 2013
+
+	This program spawns three children and has each
+	perform a task after receiving a token via pipe
+**********************************************************/
+
+//Inclusions
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/time.h>
+
+//Definitions
+#define error	-1	//Used to improve general readability of code
+
+int main(int argc, char *argv[]) {
+	int i,
+		status,
+		parent,
+		child[3],
+		exitStatus,
+		pipeOne[2],
+		pipeTwo[2],
+		pipeThree[2];
+	char command[100],
+		 token[] = "GO_AHEAD";
+
+	/* Error handling */
+	if (argc != 2) {
+		fprintf(stderr, "Usage: ./a.out <file name>\n");
+		exit(99);
+	}
+	
+	if (pipe(pipeOne) == error) {
+		fprintf(stderr, "Could not produce first pipe\n");
+		exit(99);
+	}
+
+	if (pipe(pipeTwo) == error) {
+		fprintf(stderr, "Could not produce second pipe\n");
+		exit(99);
+	}
+
+	if (pipe(pipeThree) == error) {
+		fprintf(stderr, "Could not produce third pipe\n");
+		exit(99);
+	}
+
+	/* Set all I/O operations to non-buffered
+	 * Stderr is unbuffered by default, so we 
+	 * can have this under the error handling */
+	setvbuf(stdin, NULL, _IONBF, 0);
+	setvbuf(stdout, NULL, _IONBF, 0);
+	setvbuf(fdopen(pipeOne[0], "r"), NULL, _IONBF, 0);
+	setvbuf(fdopen(pipeOne[1], "w"), NULL, _IONBF, 0);
+	setvbuf(fdopen(pipeTwo[0], "r"), NULL, _IONBF, 0);
+	setvbuf(fdopen(pipeTwo[1], "w"), NULL, _IONBF, 0);
+	setvbuf(fdopen(pipeThree[0], "r"), NULL, _IONBF, 0);
+	setvbuf(fdopen(pipeThree[1], "w"), NULL, _IONBF, 0);
+
+	/* Produces 3 children */
+	for (i = 0; i < 3; i++) {
+		if ((parent = child[i] = fork()) == error) {
+			fprintf(stderr, "Could not produce child #%d\n", i+1);
+			exit(99);
+		}
+
+		if (!parent)
+			break;
+	}
+
+	/* Write token to pipeOne and wait for children to exit */
+	if (parent) {
+		fprintf(stdout, "I am the parent of the following: %d, %d, and %d\n", child[0], child[1], child[2]);
+		
+		close(pipeOne[0]);
+
+		if (write(pipeOne[1], token, strlen(token)+1) == error) {
+			fprintf(stderr, "Error writing to pipeOne\n");
+			exit(99);
+		}
+
+		for (i = 0; i < 3; i++) {
+			waitpid(child[i], &status, 0);
+			fprintf(stdout, "From main: child, id #%d ended with status %d\n", child[i], WEXITSTATUS(status));
+		}
+
+		close(pipeOne[1]);
+
+		fprintf(stdout, "Goodbye!\n");
+	} 
+	else {
+		/* First child */
+		if (i == 0) {
+			close(pipeOne[1]);
+
+			/* Gets token from parent */
+			if (read(pipeOne[0], command, sizeof(command)) == error) {
+				fprintf(stderr, "Error reading from pipeOne\n");
+				exit(99);
+			}
+			
+			close(pipeOne[0]);
+			
+			fprintf(stdout, "I am child #%d and my id is: %d\n", i+1, getpid());
+			
+			/* Copies file received from argument */
+			sprintf(command, "cp %s newcopy.txt", argv[1]);
+			exitStatus = system(command);
+			
+			close(pipeTwo[0]);
+			
+			/* Sends token to child 2 */
+			if (write(pipeTwo[1], token, strlen(token)+1) == error) {
+				fprintf(stderr, "Error writing to pipeTwo\n");
+				exit(99);
+			}
+
+			close(pipeTwo[1]);
+
+			exit(++exitStatus); 
+		} 
+		/* Second child */
+		else if (i == 1) {
+			close(pipeTwo[1]);
+			
+			/* Gets token from child 1 */
+			if (read(pipeTwo[0], command, sizeof(command)) == error) {
+				fprintf(stderr, "Error reading from pipeTwo\n");
+				exit(99);
+			}
+
+			close(pipeTwo[0]);
+
+			fprintf(stdout, "I am child #%d and my id is: %d\n", i+1, getpid());
+
+			/* Runs ls on /bin and /sbin */
+			sprintf(command, "ls /bin /sbin -lR");
+			exitStatus = system(command);
+			
+			close(pipeThree[0]);
+			
+			/* Sends token to child 3 */
+			if (write(pipeThree[1], token, strlen(token)+1) == error) {
+				fprintf(stderr, "Error writing to pipeThree\n");
+				exit(99);
+			}
+
+			close(pipeThree[1]);
+			
+			exit(++exitStatus); 
+		} 
+		/* Third child */
+		else {
+			close(pipeThree[1]);
+
+			/* Gets token from child 2 */
+			if (read(pipeThree[0], command, sizeof(command)) == error) {
+				fprintf(stderr, "Error reading from pipeTwo\n");
+				exit(99);
+			}
+
+			fprintf(stdout, "I am child #%d and my id is: %d\n", i+1, getpid());
+
+			/* Cats file received from argument and source code */
+			sprintf(command, "cat %s Assignment3.c", argv[1]);
+			exitStatus = system(command);
+			exit(++exitStatus); 
+		}	// End if (i == 0):96
+	}	// End if (parent):78
+	
+	return 0;
+}
+From main: child, id #10876 ended with status 1
+Goodbye!
+]0;absinthe@Watson: ~/Classes/60-330/Assignment3[01;32mabsinthe@Watson[00m:[01;34m~/Classes/60-330/Assignment3[00m$ exit
+
+Script done on Thu 28 Feb 2013 03:44:30 AM EST
