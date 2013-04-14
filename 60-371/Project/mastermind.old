@@ -1,0 +1,281 @@
+/* MASTERMIND template, 03-60-371
+ * If you have any questions about the code, let me know.
+ * Feel free to improve code for readability, graphics, etc.
+ * Only one (or two, if you wish) of the defined methods should
+ * need any modification for different AI.*/
+
+import java.util.Random;
+import java.util.Scanner;
+
+public class Mastermind {
+
+	int turn = 0;
+	int turnLimit = 10;
+	int passwordOptionsLimit = 6; //password uses ints from 1 to 6
+
+	int [] passwordAI = new int [4];
+	int [] passwordPlayer = new int [4];
+
+	//information about each guess, both for reuse for AI and analysis for research
+	public class guess
+	{
+		int turn;
+		int correct;
+		int wrongPosition;
+		int [] guess = new int [4];
+	}
+
+	guess [] guessesAI = new guess [10];
+	guess [] guessesPlayer = new guess [10];
+
+	//add other variables as needed to run your AI	
+
+	public static void main (String args[])
+	{
+		Mastermind thisGame = new Mastermind();
+
+		System.out.println("Mastermind for 03-60-371-01!");
+		Scanner in = new Scanner(System.in);
+
+		//set password from AI
+		thisGame.setAIPassword();		
+		//get password from user
+		thisGame.setPlayerPassword(in);
+
+		//play game:
+		while (thisGame.turn < thisGame.turnLimit)
+		{
+			//player guesses
+			thisGame.getPlayerGuess(in, thisGame.turn);
+			if (thisGame.guessesPlayer[thisGame.turn].correct == 4)
+			{
+				System.out.println("You guessed correct!");
+				break;
+			}
+
+			//ai guesses
+			thisGame.getAIGuess(thisGame.turn);
+			if (thisGame.guessesAI[thisGame.turn].correct == 4)
+			{
+				System.out.println("AI guessed correct!");
+				break;
+			}
+
+			thisGame.turn++;
+		}
+
+		//print AI's password
+		thisGame.printAIPassword();
+
+		//data used for analysis (in Excel spreadsheet, or something) (comment out if you don't need it)
+		System.out.println("Game data : ");
+		System.out.println("Player's data: ");
+		for (int i = 0; i < 10; i++)
+		{
+			if (thisGame.guessesPlayer[i] != null)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					System.out.print(thisGame.guessesPlayer[i].guess[j]);
+				}
+				System.out.print("\t" + thisGame.guessesPlayer[i].correct);
+				System.out.print("\t" + thisGame.guessesPlayer[i].wrongPosition);
+				System.out.println("");
+			}
+		}
+		System.out.println("AI's data : ");
+		for (int i = 0; i < 10; i++)
+		{
+			if (thisGame.guessesAI[i] != null)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					System.out.print(thisGame.guessesAI[i].guess[j]);
+				}
+				System.out.print("\t" + thisGame.guessesAI[i].correct);
+				System.out.print("\t" + thisGame.guessesAI[i].wrongPosition);
+				System.out.println("");
+			}
+		}		
+	}
+
+	//MODIFY THIS TO MAKE PASSWORD HARDER FOR PLAYER (optional)
+	public void setAIPassword()
+	{
+		//make random password using symbols (integers from 1 to 6)
+		for (int i = 0; i < 4; i++)
+		{
+			passwordAI[i] = (int)((Math.random() * passwordOptionsLimit) + 1); 
+		}		
+		System.out.println("AI's Password has been set.");
+	}
+
+	public void printAIPassword()
+	{
+		System.out.print("AI password was: ");
+		for (int i = 0; i < 4; i++)
+		{
+			System.out.print(passwordAI[i]);
+		}
+		System.out.println("");
+	}
+
+	//MODIFY THIS METHOD TO IMPROVE AI
+	public void getAIGuess(int currentGuess)
+	{
+		//get password from player (just random numbers)
+		int [] newGuess = new int [4];
+		System.out.println("Please enter guess about Player's password:");
+		for (int i = 0; i < 4; i++)
+		{
+			newGuess[i] = (int) ((Math.random() * passwordOptionsLimit) + 1); 
+		}
+		//update guess in list of guesses
+		guessesAI[currentGuess] = new guess();
+		guessesAI[currentGuess].turn = currentGuess;
+		guessesAI[currentGuess].guess = newGuess;
+		int correct = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			if (newGuess[i] == passwordPlayer[i])
+			{
+				correct++;
+			}
+		}
+		guessesAI[currentGuess].correct = correct;
+		int [] PlayerpasswordCopy = new int [4];//passwordAI; 
+		System.arraycopy(passwordPlayer, 0, PlayerpasswordCopy, 0, passwordPlayer.length);
+		int almostCorrect = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				if (newGuess[i] == PlayerpasswordCopy[j])
+				{
+					PlayerpasswordCopy[j] = -1;
+					almostCorrect++;
+				}
+			}
+		}
+		guessesAI[currentGuess].wrongPosition = almostCorrect - correct;
+
+		//print results of current guess
+		System.out.print("AI's guess was ");
+		for (int i = 0; i < 4; i++)
+			System.out.print(guessesAI[currentGuess].guess[i]);
+		System.out.print(" , which has " + guessesAI[currentGuess].correct 
+				+ " correct and " + guessesAI[currentGuess].wrongPosition 
+				+ " in the wrong position.");
+		System.out.println("");
+	}
+
+	public void printPlayerPassword()
+	{
+		System.out.println("");
+		System.out.print("Your password is : ");
+		for (int i = 0; i < 4; i++)
+		{
+			System.out.print(passwordPlayer[i]);
+		}		
+	}
+
+	public void setPlayerPassword(Scanner in)
+	{
+		//get password from user
+		System.out.println("Please enter a password for AI to guess (one number at a time):");
+		for (int i = 0; i < 4; i++)
+		{
+			int tempNum = in.nextInt();
+			passwordPlayer[i] = tempNum;
+			//if any number of password is invalid, 
+			//read in rest of password as garbage, read in new password.
+			if (tempNum < 1 || tempNum > passwordOptionsLimit)
+			{
+				System.out.println("The number " + tempNum + " is not allowed. Use numbers " +
+						" between 1 and " + passwordOptionsLimit);
+				for (int j = i + 1; j < 4; j++)
+				{
+					in.nextInt();
+				}
+				i = -1;
+			}
+		}
+
+		//print out password so user knows what they entered.
+		System.out.println("");
+
+		printPlayerPassword();
+
+		System.out.println(" . Now let the game begin!");		
+	}
+
+	public void getPlayerGuess(Scanner in, int currentGuess)
+	{
+		//get password from user
+		int [] newGuess = new int [4];
+		System.out.println("Please enter guess about AI's password:");
+		for (int i = 0; i < 4; i++)
+		{
+			int tempNum = in.nextInt();
+			newGuess[i] = tempNum;
+			//if any number of password is invalid, 
+			//read in rest of password as garbage, read in new password.
+			if (tempNum < 1 || tempNum > passwordOptionsLimit)
+			{
+				System.out.println("The number " + tempNum + " is not allowed. Use numbers " +
+					 			   " between 1 and " + passwordOptionsLimit);
+				for (int j = i + 1; j < 4; j++)
+				{
+					in.nextInt();
+				}
+				i = -1;
+			}
+		}
+		//update guess in list of guesses
+		guessesPlayer[currentGuess] = new guess();
+		guessesPlayer[currentGuess].turn = currentGuess;
+		guessesPlayer[currentGuess].guess = newGuess;
+
+		int correct = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			if (newGuess[i] == passwordAI[i])
+			{
+				correct++;
+			}
+		}
+
+		guessesPlayer[currentGuess].correct = correct;
+
+		int [] AIpasswordCopy = new int [4];//passwordAI; 
+
+		System.arraycopy(passwordAI, 0, AIpasswordCopy, 0, passwordAI.length);
+
+		int almostCorrect = 0;
+
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				if (newGuess[i] == AIpasswordCopy[j])
+				{
+					AIpasswordCopy[j] = -1;
+					almostCorrect++;
+				}
+			}
+		}
+		guessesPlayer[currentGuess].wrongPosition = almostCorrect - correct;
+
+		//print results of current guess
+		System.out.print("Your guess was ");
+
+		for (int i = 0; i < 4; i++)
+			System.out.print(guessesPlayer[currentGuess].guess[i]);
+
+		System.out.print(" , which has " + guessesPlayer[currentGuess].correct +
+						 " correct and " + guessesPlayer[currentGuess].wrongPosition +
+						 " in the wrong position.");
+
+		System.out.println("");
+	}
+}
