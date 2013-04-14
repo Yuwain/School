@@ -1,0 +1,204 @@
+//Eric Alas
+//103604206
+//03-60-141
+//Feb 06-2012
+
+
+
+#include<stdio.h>
+#include<string.h>
+
+void findvalue(char [100], int); // function call to find the value of U, P or I
+
+void main ()
+{
+	char fld1[100];
+	
+	int number, r=0, c=0;
+	
+	
+	scanf("%d", &number);//asks how many questions are going to be asked
+	
+	start:
+	fgets(fld1, 100, stdin);//scans the user inputed question
+	findvalue(fld1, c);//makes a function call
+	r++;// adds to counter that controls how many times to repeat the loop
+	
+	
+	
+	if (r<=number){//checks if it has reached the number of desired questions to be solved
+		c++;
+		goto start; 	
+		}
+
+}//end of main
+
+
+/*this function checks the inputed sentence/question
+input: the sentence/question is passed and also the question number it is on
+output: if U and I are given itll print out P, if U and P are given I will be printed out, if P and I are given, U will printed out along with what question number it is on*/
+
+
+void findvalue (char fld1[100], int c)
+{	
+	char fld2[] = "P=";
+	char fld3[] = "I=";
+	char fld4[] = "U=";
+	float test, test2;
+	float response;
+	char *ptr, *ptr2, *ptr3, *ptr4;
+	char unit, scrap1, unit1, scrap2, scrap3, scrap4;
+	// variables declared
+	
+	
+	
+	if ((ptr = strstr(fld1, fld2)) != NULL)// checks if P is given first
+	
+	{
+		
+		sscanf(ptr, "%*c%*c%f%c", &test, &unit);//scans the value of P	
+		if (unit == 'm')
+				test2 = test2 / 1000;
+		else if (unit == 'k')
+				test2 = test2 *1000;
+		else if (unit == 'M')
+				test2 = test2 * 1000000;
+								//checks if it has a prefix and fixes the number accordingly	
+
+		if((ptr2 = strstr(ptr, fld3)) != NULL)//checks if next is I
+		{
+			
+			sscanf(ptr2, "%c%c%f%c", &scrap3, &scrap4, &test2, &unit1);//stores value of I
+			printf("I = %f, %f, %c",test, test2, unit1);
+			if (unit1 == 'm')
+				test2 = test2 / 1000;
+			else if (unit1 == 'k')
+				test2 = test2 *1000;
+			else if (unit1 == 'M')
+				test2 = test2 * 1000000;
+								//checks if it has a prefix and fixes the number accordingly	
+				
+			response = test2 / test;
+			printf("\nQuestion %d\nU=%.2fV\n\n", c, response);//prints result
+				
+				
+		}	
+			
+		else if ((ptr2 = strstr(ptr, fld4)) != NULL)// if not I than it must be U given
+		{
+			sscanf(ptr2, "%c%c%f%c", &scrap3, &scrap4, &test2, &unit1);//stores value of U
+			if (unit1 == 'm')
+					test2 = test2 / 1000;
+			else if (unit1 == 'k')
+				test2 = test2 *1000;
+			else if (unit1 == 'M')
+				test2 = test2 * 1000000;	
+									//checks if it has a prefix and fixes the number accordingly	
+			response = test / test2;
+			printf("\nQuestion %d\nI=%.2fA\n\n",c, response);//prints result
+		
+		}
+
+	}//ened of if		
+
+	if ((ptr = strstr(fld1, fld3)) != NULL)//checks if I is given first
+	{
+		
+		sscanf(ptr3, "%c%c%f%c", &scrap1, &scrap2, &test, &unit);//stores values of I
+		if (unit == 'm')
+			test2 = test2 / 1000;
+		else if (unit == 'k')
+			test2 = test2 *1000;
+		else if (unit == 'M')
+			test2 = test2 * 1000000;
+							//checks if it has a prefix and fixes the number accordingly				
+										
+		if((ptr2 = strstr(ptr, fld2)) != NULL)// checks if next is U
+		{
+				
+			sscanf(ptr2, "%c%c%f%c", &scrap3, &scrap4, &test2, &unit1);//stores value of U
+			if (unit1 == 'm')
+				test2 = test2 / 1000;
+			else if (unit1 == 'k')
+				test2 = test2 *1000;
+			else if (unit1 == 'M')
+				test2 = test2 * 1000000;
+									//checks if it has a prefix and fixes the number accordingly	
+														
+			response = test2 / test;
+			printf("\nQuestion %d\nU=%.2fV\n\n",c, response);//prints result
+				
+				
+			}	
+			
+		else if ((ptr2 = strstr(ptr, fld4)) != NULL)//if not U must be P
+		{
+			sscanf(ptr2, "%c%c%f%c", &scrap3, &scrap4, &test2, &unit1);//stores value of P
+			if (unit1 == 'm')
+				test2 = test2 / 1000;
+			else if (unit1 == 'k')
+				test2 = test2 *1000;
+			else if (unit1 == 'M')
+				test2 = test2 * 1000000;	
+										//checks if it has a prefix and fixes the number accordingly	
+			response = test * test2;
+			printf("\nQuestion %d\nP=%.2fW\n\n",c, response);//prints result
+					
+				}
+	}
+	
+	if ((ptr4 = strstr(fld1, fld4)) != NULL)//if not P or I than must be U
+	{
+		
+		sscanf(ptr4, "%c%c%f%c", &scrap1, &scrap2, &test, &unit);//store value of U
+		if (unit == 'm')
+			test2 = test2 / 1000;
+		else if (unit == 'k')
+			test2 = test2 *1000;
+		else if (unit == 'M')
+			test2 = test2 * 1000000;	
+										//checks if it has a prefix and fixes the number accordingly	
+
+		if((ptr2 = strstr(ptr4, fld2)) != NULL)//checks if the next is P
+			{
+				
+			sscanf(ptr2, "%c%c%f%c", &scrap3, &scrap4, &test2, &unit1);//stores value of P
+		
+			if (unit1 == 'm')
+				test2 = test2 / 1000;
+			else if (unit1 == 'k')
+				test2 = test2 *1000;
+			else if (unit1 == 'M')
+				test2 = test2 * 1000000;	
+								//checks if it has a prefix and fixes the number accordingly	
+				response = test2 / test;
+				printf("\nQuestion %d\nI=%.2fA\n\n",c, response);//prints result
+				
+				
+		}	
+			
+		else if ((ptr2 = strstr(ptr4, fld3)) != NULL)//if not P must be U
+		{
+				
+			sscanf(ptr2, "%c%c%f%c", &scrap3, &scrap4, &test2, &unit1);//stores value of U	
+			
+			if (unit1 == 'm')
+				test2 = test2 / 1000;
+			else if (unit1 == 'k')
+				test2 = test2 *1000;
+			else if (unit1 == 'M')
+				test2 = test2 * 1000000;
+									//checks if it has a prefix and fixes the number accordingly	
+			response = test * test2;
+			printf("\nQuestion %d\nP=%.2fW\n\n",c, response); //prints result
+		}
+	}
+	
+
+	
+	
+}//end of findvalues
+
+
+
+
