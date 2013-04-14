@@ -1,0 +1,111 @@
+import java.io.*;
+
+terminal 			IF, ELSE, WRITE, READ, RETURN, BEGIN, END, MAIN, INT, REAL, SEMI, COMMA, LPAREN, RPAREN, PLUS, MINUS, TIMES, DIVIDE, CEQUAL, EEQUAL, NEQUAL, ERROR;
+terminal String 	IDENTIFIER, NUMBER, QUOTE;
+
+non terminal String MethodDecl, FormalParams, FormalParam, Type, Block, Statements, Statement, LocalVarDecl, AssignStmt, ReturnStmt, IfStmt, WriteStmt, ReadStmt;
+non terminal String Expression, MultExpr, PrimaryExpr, BoolExpression, ActualParams, Program, Title;
+
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE;
+precedence left ELSE;
+
+Title			::= Program:e 															{: RESULT = "import java.io.*;\n\n" +
+										  															"public class A4 {\n" +
+										  															"static BufferedReader $br;\n" +
+										  															"static BufferedWriter $bw;\n" +
+										  															"static double $tmp_real;\n\n" +
+										  															e + "}\n"; :}
+				  ;
+
+/* High-level program structures */
+Program			::= MethodDecl:e 			 											{: RESULT = e; :}
+				  | MethodDecl:e1 Program:e2 											{: RESULT = e1 + "" + e2; :}
+				  ;
+
+MethodDecl		::= Type:e1 MAIN IDENTIFIER:e2 LPAREN FormalParams:e3 RPAREN Block:e4 	{: RESULT = "public static void main(String[] args) throws Exception {\n"+ 
+																									e4 + "}\n"; :}
+				  | Type:e1 IDENTIFIER:e2 LPAREN FormalParams:e3 RPAREN Block:e4	  	{: RESULT = "public static " + e1 + " " + e2 + "(" + e3 + ") throws Exception {\n" + 
+				  																					e4 + "}\n"; :}
+				  ;
+
+FormalParams	::= 																	{: RESULT = ""; :}
+				  | FormalParam:e 														{: RESULT = e; :} 
+				  | FormalParam:e1 COMMA FormalParams:e2 								{: RESULT = e1 + "," + e2; :}
+				  ;
+
+FormalParam		::= Type:e1 IDENTIFIER:e2 												{: RESULT = e1 + " " + e2; :} 
+				  ;
+
+Type			::= INT  																{: RESULT = "int "; :}
+				  | REAL 																{: RESULT = "double"; :}
+				  ;
+
+
+/* Statements */
+Block			::= BEGIN Statements:e END 												{: RESULT = e; :} 
+				  | BEGIN END 			   												{: RESULT = ""; :}
+				  ;
+
+Statements		::= Statement:e 			   											{: RESULT = e; :}
+				  | Statement:e1 Statements:e2 											{: RESULT = e1 + "" + e2; :}
+				  ;
+
+Statement		::= Block:e 															{: RESULT = e; :}		
+			  	  | LocalVarDecl:e 														{: RESULT = e; :}
+			  	  | AssignStmt:e 														{: RESULT = e; :}
+			  	  | ReturnStmt:e 														{: RESULT = e; :}
+			  	  | IfStmt:e 															{: RESULT = e; :}
+			  	  | WriteStmt:e 														{: RESULT = e; :}
+			  	  | ReadStmt:e 															{: RESULT = e; :}
+				  ;
+
+LocalVarDecl 	::= Type:e1 IDENTIFIER:e2 SEMI 											{: RESULT = e1 + "" + e2 + ";\n"; :}
+				  ;
+
+AssignStmt		::= IDENTIFIER:e1 CEQUAL Expression:e2 SEMI 							{: RESULT = e1 + " = " + e2 + ";\n"; :}
+				  ;
+
+ReturnStmt		::= RETURN Expression:e SEMI 											{: RESULT = "return " + e + ";\n"; :}
+				  ;
+
+IfStmt			::= IF LPAREN BoolExpression:e1 RPAREN Statement:e2 				  	{: RESULT = "if (" + e1 + ") \n{\n" + e2 + "}\n"; :}
+				  | IF LPAREN BoolExpression:e1 RPAREN Statement:e2 ELSE Statement:e3 	{: RESULT = "if (" + e1 + ") {\n" + e2 + "}\nelse {\n" + e3 + "}\n"; :}
+				  ;
+
+WriteStmt		::= WRITE LPAREN Expression:e1 COMMA QUOTE:e2 RPAREN SEMI 				{: RESULT = "$tmp_real = " + e1 + ";\n" +
+																									"$bw = new BufferedWriter(new FileWriter("+e2+"));\n" +
+    																								"$bw.write(\"\" + $tmp_real);\n" +
+    																								"$bw.close();\n"; :}
+				  ;
+  
+ReadStmt		::= READ LPAREN IDENTIFIER:e1 COMMA QUOTE:e2 RPAREN SEMI  				{: RESULT = "$br = new BufferedReader(new FileReader("+e2+"));\n" +
+    																						    	e1 + " = new Integer($br.readLine()).intValue();\n"; :}
+				  ;
+
+
+/* Expressions */
+Expression		::= MultExpr:e 															{: RESULT = e; :}
+				  | MultExpr:e1 PLUS  Expression:e2 									{: RESULT = e1 + " + " + e2; :}
+				  | MultExpr:e1 MINUS Expression:e2 									{: RESULT = e1 + " - " + e2; :}
+				  ;
+
+MultExpr 		::= PrimaryExpr:e 					 						 			{: RESULT = e; :}
+				  | PrimaryExpr:e1 TIMES  MultExpr:e2 									{: RESULT = e1 + " * " + e2; :}
+				  | PrimaryExpr:e1 DIVIDE MultExpr:e2 									{: RESULT = e1 + " / " + e2; :}
+				  ;
+
+PrimaryExpr		::= NUMBER:e 															{: RESULT = e; :}
+				  | IDENTIFIER:e 														{: RESULT = e; :}
+				  | LPAREN Expression:e RPAREN 											{: RESULT = "(" + e + ")"; :}
+				  | IDENTIFIER:e1 LPAREN ActualParams:e2 RPAREN 						{: RESULT = e1 + "(" + e2 + ")"; :}
+				  | IDENTIFIER:e LPAREN RPAREN 											{: RESULT = e + "(" + ")"; :}
+				  ;
+
+BoolExpression	::= Expression:e1 EEQUAL Expression:e2 									{: RESULT = e1 + " == " + e2; :}
+				  | Expression:e1 NEQUAL Expression:e2 									{: RESULT = e1 + " != " + e2; :}
+				  ;
+
+ActualParams	::= Expression:e 														{: RESULT = e; :}
+				  | Expression:e1 COMMA ActualParams:e2 								{: RESULT = e1 + "," + e2; :}
+				  ;

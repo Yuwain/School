@@ -1,0 +1,1 @@
+INT f1(INT x, INT y)  BEGIN z1 := x*x - y*y; INT x1; READ(y, "A42.input"); END

@@ -1,0 +1,96 @@
+import java.io.*;
+
+terminal 			QUOTE, IDENTIFIER, IF, ELSE, WRITE, READ, RETURN, BEGIN, END, MAIN, INT, REAL, SEMI, COMMA, LPAREN, RPAREN, PLUS, MINUS, TIMES, DIVIDE, CEQUAL, EEQUAL, NEQUAL, NUMBER;
+
+non terminal Integer Program;
+non terminal MethodDecl, FormalParams, FormalParam, Type, Block, Statements, Statement, LocalVarDecl, AssignStmt, ReturnStmt, IfStmt, WriteStmt, ReadStmt, Expression, MultExpr, PrimaryExpr, BoolExpression, ActualParams;
+
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE;
+precedence left ELSE;
+
+/* High-level program structures */
+Program			::= MethodDecl {: RESULT = 1; :}
+				  | MethodDecl Program:e {: RESULT=e+1; :}
+				  ;
+
+MethodDecl		::= Type MAIN IDENTIFIER LPAREN FormalParams RPAREN Block
+				  | Type IDENTIFIER LPAREN FormalParams RPAREN Block
+				  ;
+
+FormalParams	::= 
+				  | FormalParam 
+				  | FormalParam COMMA FormalParams
+				  ;
+
+FormalParam		::= Type IDENTIFIER
+				  ;
+
+Type			::= INT 
+				  | REAL
+				  ;
+
+
+/* Statements */
+Block			::= BEGIN Statements END
+				  | BEGIN END
+				  ;
+
+Statements		::= Statement
+				  | Statement Statements
+				  ;
+
+Statement		::= Block 		
+			  	  | LocalVarDecl 	
+			  	  | AssignStmt 	
+			  	  | ReturnStmt 	
+			  	  | IfStmt 		
+			  	  | WriteStmt 
+			  	  | ReadStmt 
+				  ;
+
+LocalVarDecl 	::= Type IDENTIFIER SEMI
+				  ;
+
+AssignStmt		::= IDENTIFIER CEQUAL Expression SEMI
+				  ;
+
+ReturnStmt		::= RETURN Expression SEMI
+				  ;
+
+IfStmt			::= IF LPAREN BoolExpression RPAREN Statement
+				  | IF LPAREN BoolExpression RPAREN Statement ELSE Statement
+				  ;
+
+WriteStmt		::= WRITE LPAREN Expression COMMA QUOTE RPAREN SEMI
+				  ;
+
+ReadStmt		::= READ LPAREN IDENTIFIER COMMA QUOTE RPAREN SEMI
+				  ;
+
+
+/* Expressions */
+Expression		::= MultExpr
+				  | MultExpr PLUS  Expression
+				  | MultExpr MINUS Expression
+				  ;
+
+MultExpr 		::= PrimaryExpr
+				  | PrimaryExpr TIMES  MultExpr 
+				  | PrimaryExpr DIVIDE MultExpr
+				  ;
+
+PrimaryExpr		::= NUMBER
+				  | IDENTIFIER
+				  | LPAREN Expression RPAREN
+				  | IDENTIFIER LPAREN ActualParams RPAREN
+				  | IDENTIFIER LPAREN RPAREN
+				  ;
+
+BoolExpression	::= Expression EEQUAL Expression
+				  | Expression NEQUAL Expression
+				  ;
+
+ActualParams	::= Expression
+				  | Expression COMMA ActualParams 
+				  ;

@@ -1,0 +1,10 @@
+INT MAIN F2() /** CORRECT PROGRAM. OUTPUT: 25. A41.INPUT --> 10**/
+ BEGIN
+   INT X;
+   X  := 5;
+   BEGIN
+        REAL Z;
+        READ(Z, "A41.INPUT");
+        WRITE(X*3.25+Z, "XKOUTPUT");
+   END
+ END

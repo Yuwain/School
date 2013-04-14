@@ -1,0 +1,39 @@
+import java.io.*;
+import java_cup.runtime.*;
+
+%%
+%implements java_cup.runtime.Scanner
+%type Symbol
+%function next_token
+%class A3Scanner
+%eofval{ return null;
+%eofval}
+%%
+
+\/\*\*([^*]|[\r\n]|(\*([^*]|[\r\n]))|(\*\*([^\/]|[\r\n])))*\*\*\/ {}
+\"([^\"])*\" { return new Symbol(A3Symbol.____________________); }
+"IF" 		 { return new Symbol(A3Symbol.______________________); }
+"ELSE" 		 { return new Symbol(A3Symbol._______________________); }
+"WRITE" 	 { return new Symbol(A3Symbol.________________________); }
+"READ" 		 { return new Symbol(A3Symbol._________________________); }
+"RETURN" 	 { return new Symbol(A3Symbol.__________________________); }
+"BEGIN" 	 { return new Symbol(A3Symbol.___________________________); }
+"END" 		 { return new Symbol(A3Symbol.____________________________); }
+"MAIN" 		 { return new Symbol(A3Symbol._____________________________); }
+"INT" 		 { return new Symbol(A3Symbol.______________________________); }
+"REAL" 		 { return new Symbol(A3Symbol._______________________________); }
+";"			 { return new Symbol(A3Symbol.________________________________); }
+","			 { return new Symbol(A3Symbol._________________________________); }
+"("			 { return new Symbol(A3Symbol.__________________________________); }
+")"			 { return new Symbol(A3Symbol.___________________________________); }
+"+"			 { return new Symbol(A3Symbol.____________________________________); }
+"-"			 { return new Symbol(A3Symbol._____________________________________); }
+"*"			 { return new Symbol(A3Symbol.______________________________________); }
+"/"			 { return new Symbol(A3Symbol._______________________________________); }
+":="		 { return new Symbol(A3Symbol.________________________________________); }
+"=="		 { return new Symbol(A3Symbol._________________________________________); }
+"!="		 { return new Symbol(A3Symbol.__________________________________________); }
+[0-9]+|[0-9]+\.[0-9]+ { return new Symbol(A3Symbol.___________________________________________); }
+[a-zA-Z][a-zA-Z0-9]* { return new Symbol(A3Symbol._____________________); }
+[\r\n] 		 { }
+. 			 { }

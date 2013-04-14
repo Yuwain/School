@@ -1,0 +1,11 @@
+INT MAIN F()  /** CORRECT "PROGRAM" & * & % @ ! */ WITH QSTRING A41.INPUT = 10 RESULT = 110 **/
+BEGIN
+	INT X;
+	X :=3;
+	IF(X==3) 
+	BEGIN
+        	READ(X,"A41.input");
+	END  ELSE BEGIN END
+	WRITE( X+100, "A4.output");
+END
+
