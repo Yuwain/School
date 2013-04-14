@@ -1,6 +1,6 @@
 Computer science assignments written by Jeremy High
 
-The course name and languages used for each course code:  
+The languages used for each course:  
 60-100	- Miranda  
 60-140	- C  
 60-141	- C  
