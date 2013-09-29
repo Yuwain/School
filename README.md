@@ -16,3 +16,4 @@ The languages used for each course:
 60-322	- Java  
 60-330	- C  
 60-371	- Netlogo, Java  
+60-440	- Scheme  
