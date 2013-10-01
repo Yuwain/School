@@ -1,6 +1,6 @@
-|# Written by: Jeremy High
+#| Written by: Jeremy High
    Student ID: 103306452
-   Written on: September 20th, 2013 #|
+   Written on: September 20th, 2013 |#
 
 ;A left-associative calculator for addition and subtraction
 (define (calculator expr)
