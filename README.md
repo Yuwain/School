@@ -16,6 +16,8 @@ The languages used for each course:
 60-311	- N/A  
 60-322	- Java  
 60-330	- C  
+60-340  - C++  
+60-352  - C++, OpenGL Framework (glfw), OpenGL  
 60-367  - N/A  
 60-371	- Netlogo, Java  
 60-440	- Scheme, XSLT, AspectJ  
