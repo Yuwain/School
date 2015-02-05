@@ -332,27 +332,19 @@ class A2 {
 					case -4:
 						break;
 					case 4:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -5:
 						break;
 					case 5:
-						{
-	++numbers;
-}
+						{ ++numbers; }
 					case -6:
 						break;
 					case 6:
-						{
-	++quotes;
-}
+						{ ++quotes; }
 					case -7:
 						break;
 					case 7:
-						{ 
-	++keywords;
-}
+						{ ++keywords; }
 					case -8:
 						break;
 					case 8:
@@ -364,15 +356,11 @@ class A2 {
 					case -10:
 						break;
 					case 11:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -11:
 						break;
 					case 12:
-						{
-	++numbers;
-}
+						{ ++numbers; }
 					case -12:
 						break;
 					case 14:
@@ -380,111 +368,75 @@ class A2 {
 					case -13:
 						break;
 					case 15:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -14:
 						break;
 					case 17:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -15:
 						break;
 					case 19:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -16:
 						break;
 					case 21:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -17:
 						break;
 					case 22:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -18:
 						break;
 					case 23:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -19:
 						break;
 					case 25:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -20:
 						break;
 					case 26:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -21:
 						break;
 					case 27:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -22:
 						break;
 					case 28:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -23:
 						break;
 					case 29:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -24:
 						break;
 					case 30:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -25:
 						break;
 					case 31:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -26:
 						break;
 					case 32:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -27:
 						break;
 					case 33:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -28:
 						break;
 					case 34:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -29:
 						break;
 					case 35:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -30:
 						break;
 					case 36:
-						{ 
-	++identifiers;
-}
+						{ ++identifiers; }
 					case -31:
 						break;
 					default:
